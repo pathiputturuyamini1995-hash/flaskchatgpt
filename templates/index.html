@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Text to Image Generator (Free)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h1 { color: #333; }
+    button { padding: 6px 12px; margin-left: 10px; }
+    img { margin-top: 20px; border-radius: 8px; box-shadow: 0 0 8px #888; }
+  </style>
+</head>
+<body>
+  <h1>Text to Image Generator (Free)</h1>
+  <label>
+    Enter your description:
+    <input id="prompt" size="60" placeholder="Example: two kids playing in the park">
+  </label>
+  <button id="generate">Generate Image</button>
+
+  <div id="msg" style="margin-top:10px;color:red;"></div>
+  <div id="output" style="margin-top:15px;"></div>
+
+  <script>
+    document.getElementById("generate").onclick = async () => {
+      const prompt = document.getElementById("prompt").value.trim();
+      const msg = document.getElementById("msg");
+      const output = document.getElementById("output");
+      msg.textContent = "";
+      output.innerHTML = "";
+
+      if (!prompt) {
+        msg.textContent = "Please enter a description.";
+        return;
+      }
+
+      try {
+        const res = await fetch("/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt })
+        });
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({ error: res.statusText }));
+          throw new Error(j.error || "Request failed");
+        }
+
+        const j = await res.json();
+        const img = document.createElement("img");
+        img.src = j.image_url;
+        img.width = 512;
+        output.appendChild(img);
+      } catch (e) {
+        msg.textContent = "Error: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
