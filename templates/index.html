@@ -1,60 +1,77 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Text to Image Generator (Free)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flask ChatGPT</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    h1 { color: #333; }
-    button { padding: 6px 12px; margin-left: 10px; }
-    img { margin-top: 20px; border-radius: 8px; box-shadow: 0 0 8px #888; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 20px;
+    }
+    textarea {
+      width: 80%;
+      height: 100px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #response {
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      margin: 20px auto;
+      text-align: left;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
-  <h1>Text to Image Generator (Free)</h1>
-  <label>
-    Enter your description:
-    <input id="prompt" size="60" placeholder="Example: two kids playing in the park">
-  </label>
-  <button id="generate">Generate Image</button>
+  <h1>Flask ChatGPT App</h1>
+  <textarea id="user_input" placeholder="Type your message here..."></textarea><br>
+  <button onclick="sendMessage()">Send</button>
 
-  <div id="msg" style="margin-top:10px;color:red;"></div>
-  <div id="output" style="margin-top:15px;"></div>
+  <div id="response"></div>
 
   <script>
-    document.getElementById("generate").onclick = async () => {
-      const prompt = document.getElementById("prompt").value.trim();
-      const msg = document.getElementById("msg");
-      const output = document.getElementById("output");
-      msg.textContent = "";
-      output.innerHTML = "";
-
-      if (!prompt) {
-        msg.textContent = "Please enter a description.";
+    async function sendMessage() {
+      const userMessage = document.getElementById("user_input").value;
+      if (!userMessage) {
+        alert("Please enter a message!");
         return;
       }
 
-      try {
-        const res = await fetch("/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt })
-        });
+      // Send message to Flask backend
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "message=" + encodeURIComponent(userMessage)
+      });
 
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({ error: res.statusText }));
-          throw new Error(j.error || "Request failed");
-        }
+      const data = await response.json();
+      document.getElementById("response").innerHTML = 
+        "<b>You:</b> " + userMessage + "<br><b>Bot:</b> " + data.reply;
 
-        const j = await res.json();
-        const img = document.createElement("img");
-        img.src = j.image_url;
-        img.width = 512;
-        output.appendChild(img);
-      } catch (e) {
-        msg.textContent = "Error: " + e.message;
-      }
-    };
+      // Clear textbox after sending
+      document.getElementById("user_input").value = "";
+    }
   </script>
 </body>
 </html>
